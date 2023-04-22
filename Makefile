@@ -11,7 +11,7 @@ CXXFLAGS = -MMD -ggdb -O3 -std=gnu++20 -m$(BITS)
 LDFLAGS	 = -m$(BITS) -lpthread -lrt
 
 # The basenames of the c++ files that this program uses
-CXXFILES = 3opt
+CXXFILES = bruteForce
 
 # The executable we will build
 TARGET = $(ODIR)/out
