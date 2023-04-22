@@ -5,7 +5,7 @@
 
 typedef double Dist; // INPUT POINTS 
 Dist ptarr[101][2];
-int n = 0;
+int n = 10;
 
 #define sqr(x) ((x) * (x))
 Dist dist(int i, int j) { 
@@ -15,10 +15,10 @@ Dist dist(int i, int j) {
 
 int p[102]; // PERM VECTOR: current tour is in p[0..n-1] 
 #define dp(i, j) (dist(p[i], p[j]))
-void swap(int i, int j) { 
+void swap(int i, int j) {
   int t = p[i];
   p[i] = p[j];
-  p[j] = t; 
+  p[j] = t;
 }
 
 void reverse(int i, int j) {// reverse p[i..j] 
@@ -82,13 +82,13 @@ void kopt() { // Perform 2-, 2h- and 3-opting at once
       for (i = 2; i < n-3; i++) { // 3-opt
         for (j = i+2; j < n; j++) {
           // Consider moving p[i+1..j-1] after p[0] 
-          Dist origdist, newdist1, newdist2;
-          origdist = dp(0,1)+dp(i, i+1) + dp(j-1, j); 
-          ndist1 = dp(0,i+1)+dp(1,j-1) +dp(i, j); 
-          ndist2 = dp(0,j-1)+dp(1, i+1) + dp(i, j); 
+          Dist origdist, ndist1, ndist2;
+          origdist = dp(0,1) + dp(i, i+1) + dp(j-1, j); 
+          ndist1 = dp(0,i+1) + dp(1,j-1) + dp(i, j); 
+          ndist2 = dp(0,j-1) + dp(1, i+1) + dp(i, j); 
           if (ndist1<origdist || ndist2<origdist) {
             // p[i+1..j-1] between p[0] and p[1] 
-            if (newdist1 < newdist2)
+            if (ndist1 < ndist2)
               reverse(i+1, j-1); 
             reverse(1, i);
             reverse(1, j-1);
@@ -117,7 +117,7 @@ void kick() {// replace tour ABCD with ADCB -- double bridge
   reverse(0, n-1);    // ABCD = A(BrCrDr)r
 }
 
-void main() { 
+int main() { 
   int i, j, starts = 4, runs = 250;
   while (scanf("%lf %lf", ptarr[n]+0, ptarr[n]+1) != EOF) 
     ++n;
@@ -143,4 +143,6 @@ void main() {
   if (0)
     for (i = 0; i < n; i++)
       printf("%g\t%g\n", ptarr[p[i]][0], ptarr[p[i]][1]);
+  
+  return 0;
 }
