@@ -7,6 +7,8 @@
 #include <cassert>
 #include <unistd.h>
 #include <chrono>
+#include <atomic>
+#include <tbb/tbb.h>
 
 // Data types and sizes 
 #define MASKTYPE long 
@@ -44,8 +46,9 @@ void swap(int i, int j) {
   int t = p[i]; p[i] = p[j]; p[j] = t;
 } 
 #define dist2(i, j) (distarr[i][j])
-Dist maxdiamdist;
-int maxdiamindexi;
+atomic<Dist> maxdiamdist;
+// int maxdiamindexi;
+atomic_int maxdiamindexi;
 
 void check(Dist sum) { 
   int i;
@@ -155,15 +158,24 @@ void search(int m, Dist sum, Mask mask) {
 void solve() { 
   int i, j;
   maxdiamdist = ZERO;
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < n; j++) {
-      Dist td = distarr[i][j] = geomdist(i, j); 
-      if (td > maxdiamdist) {
-        maxdiamdist = td; 
-        maxdiamindexi = i;
-      }
-    }
-  }
+  tbb::parallel_for(0, n, [&] (int i) {
+    tbb::parallel_for(0, n, [&] (int j) {
+        Dist td = distarr[i][j] = geomdist(i, j);
+        if (td > maxdiamdist) {
+            maxdiamdist = td; 
+            maxdiamindexi = i;
+        }
+        });
+    });
+//   for (i = 0; i < n; i++) {
+//     for (j = 0; j < n; j++) {
+//       Dist td = distarr[i][j] = geomdist(i, j); 
+//       if (td > maxdiamdist) {
+//         maxdiamdist = td; 
+//         maxdiamindexi = i;
+//       }
+//     }
+//   }
   for (i = 0; i < MAXN; i++) {
     bit[i] = (Mask) 1 << i;
   }
@@ -184,17 +196,19 @@ void solve() {
 void usage() {
     std::cout
         << "Command-Line Options:" << std::endl
-        << "  -n <int> : number of nodes in path" << std::endl << std::endl;
+        << " -n <int> : number of nodes in path" << std::endl 
+        << " -t <int> : number of threads" << std:: endl << std::endl;
     exit(0);
 }
 
 // Parse command line arguments using getopt()
-void parseargs(int argc, char** argv, int& n) {
+void parseargs(int argc, char** argv, int& n, int& t) {
     // parse the command-line options
     int opt;
-    while ((opt = getopt(argc, argv, "n:")) != -1) {
+    while ((opt = getopt(argc, argv, "n:t:")) != -1) {
         switch (opt) {
-            case 'n': n = atoi(optarg); break;
+            case 'n': n = atoi(optarg);
+            case 't': t = atoi(optarg); break;
         }
     }
 }
@@ -203,10 +217,13 @@ int main(int argc, char *argv[])
 {
 
   n = 10;
+  int t = 8;
 
-  parseargs(argc, argv, n);
+  parseargs(argc, argv, n, t);
 
-  assert(n > 1);
+  assert(n > 1 &&  t > 0);
+
+  tbb::global_control gc(tbb::global_control::max_allowed_parallelism, t);
 
   int i;
   float secs;
