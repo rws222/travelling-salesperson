@@ -55,8 +55,11 @@ void check(Dist sum) {
   sum += dist2(p[0], p[n-1]);
   if (sum < minsum) {
     minsum = sum;
-    for (i = 0; i < n; i++)
-      minp[i] = p[i];
+    tbb::parallel_for(0, n, [&] (int i) {
+        minp[i] = p[i];
+    });
+    // for (i = 0; i < n; i++)
+    //   minp[i] = p[i];
   }
 }
 
@@ -114,9 +117,28 @@ Tptr bin[MAXBIN];
 Dist mstdistlookup(Mask mask) { 
   Tptr p;
   int h = mask % MAXBIN;
-  for (p = bin[h]; p != NULL; p = p->next)
-    if (p->arg == mask) 
-      return p->val;
+  Dist result = tbb::parallel_reduce(
+    tbb::blocked_range<Tptr>(bin[h], NULL),
+    Dist(),
+    [&](const tbb::blocked_range<Tptr>& range, Dist init) -> Dist {
+      for (Tptr p = range.begin(); p != range.end(); ++p) {
+        if (p->arg == mask) {
+          init = p->val;
+          break;
+        }
+      }
+      return init;
+    },
+    [](Dist x, Dist y) -> Dist {
+      return x + y;
+    });
+
+  if (result > 0) {
+    return result;
+  }
+  // for (p = bin[h]; p != NULL; p = p->next)
+  //   if (p->arg == mask) 
+  //     return p->val;
   p = (Tptr) malloc(sizeof(Tnode)); 
   p->arg = mask;
   p->val = mstdist(mask);
@@ -134,9 +156,12 @@ void search(int m, Dist sum, Mask mask) {
   if (m == 1) {
     check(sum + dist2(p[0], p[1]));
   } else {
-    for (i = 0; i < m; i++) {
-      order[i] = i;
-    }
+    tbb::parallel_for(0, m, [&] (int i) {
+        order[i] = i;
+    });
+    // for (i = 0; i < m; i++) {
+    //   order[i] = i;
+    // }
     for (top = m; top > 1; top -= half) { // Approx sort via tourn
       half = top / 2;
       for (i=0, j=top-half; i<half; i++, j++) {
@@ -235,8 +260,8 @@ int main(int argc, char *argv[])
   auto start = chrono::high_resolution_clock::now(); 
   solve();
   auto end = chrono::high_resolution_clock::now();
-//   cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
-  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
+  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
   // secs = ((float) clock() - start) / CLOCKS_PER_SEC;
   // printf("%d\t%7.2f\t%10.4f\n", n, secs, (float) minsum);
   // }
