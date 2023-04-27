@@ -8,6 +8,9 @@
 #include <chrono>
 #include <atomic>
 #include <tbb/tbb.h>
+#include <mutex>
+#include <algorithm>
+#include <iterator>
 
 // Data types and sizes 
 #define MASKTYPE long 
@@ -33,6 +36,7 @@ Point c[MAXN];
 
 int p[MAXN];
 atomic<Dist> minsum = INF;
+mutex m;
 int minp[MAXN];
 Dist distarr[MAXN][MAXN];
 
@@ -60,40 +64,27 @@ void solve() {
     }
     // atomic<Dist> optimal_cost = INF;
     // Point optimal_path[n];
-for(int z = 0; z < n; z++)
-            cout << c[z].x << " \n";
-    tbb::parallel_for(tbb::blocked_range<int>(1, n+1), [&](const tbb::blocked_range<int>& r) {
-        
+
+    atomic<int> count{0};
+
+    tbb::parallel_for(tbb::blocked_range<int>(2, n+1), [&](const tbb::blocked_range<int>& r) {
         for (int i = r.begin(); i != r.end(); ++i) {
-            do {
-                Dist temp_cost = 0;
-                for (int j = 1; j < n; j++) {
-                    temp_cost += distarr[c[j-1].orig_index][c[j].orig_index];
-                }
-                temp_cost += distarr[c[n-1].orig_index][c[0].orig_index];
-                if (temp_cost < minsum) {
-                    minsum = temp_cost;
-                }
-            } while (std::next_permutation(c+1, c+i));
+          Point copy_c[MAXN];
+          copy(begin(c), end(c), begin(copy_c));
+          do {
+            count++;
+              Dist temp_cost = 0;
+              for (int j = 1; j < n; j++) {
+                  temp_cost += distarr[copy_c[j-1].orig_index][copy_c[j].orig_index];
+              }
+              temp_cost += distarr[copy_c[n-1].orig_index][copy_c[0].orig_index];
+              if (temp_cost < minsum) {
+                  minsum = temp_cost;
+              }
+          } while (std::next_permutation(copy_c+1, copy_c+i));
         }
     });
-    cout << "\n";
-    for(int z = 0; z < n; z++)
-            cout << c[z].x << " \n";
-
-    // do {
-    //     Dist temp_cost = 0;
-    //     for(int i = 1 ; i < n; i++){
-    //         temp_cost += distarr[c[i-1].orig_index][c[i].orig_index];
-    //     }
-    //     temp_cost += distarr[c[n-1].orig_index][c[0].orig_index];
-    //     if(temp_cost < optimal_cost){
-    //         // optimal_cost = temp_cost;
-    //         minsum = temp_cost;
-    //         // for(int jj = 0; jj < n ; jj++)
-    //         //   optimal_path[jj] = c[jj];
-    //     }
-    // } while(next_permutation(c+1, c+n));
+  cout << count << "\n";
 }
 
 // Report on how to use the command line to configure this program
@@ -143,7 +134,7 @@ int main(int argc, char *argv[])
   auto end = chrono::high_resolution_clock::now();
   cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
   // secs = ((float) clock() - start) / CLOCKS_PER_SEC;
-//   cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
   // printf("%d\t%7.2f\t%10.4f\n", n, secs, (float) minsum);
   // }
   return 0;
