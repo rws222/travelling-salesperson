@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <chrono>
 
 typedef double Dist; // INPUT POINTS 
 Dist ptarr[101][2];
@@ -121,10 +122,14 @@ int main() {
   int i, j, starts = 4, runs = 250;
   while (scanf("%lf %lf", ptarr[n]+0, ptarr[n]+1) != EOF) 
     ++n;
+  
+  // start timer
+  auto start = std::chrono::high_resolution_clock::now();
+
   savedcost[0] = 999999999; // init best tour ever in perm[0]
   for (i = 0; i < starts; i++) { // chained 3-opt
     for(j=0;j<n;j++) // fill array
-      p[j] = i;
+      p[j] = j;
     for(j=n;j>1;j--) // randomly shuffle
       swap(j-1, rand() % j);
     kopt();
@@ -139,6 +144,11 @@ int main() {
     }
   }
   restoreperm(0);
+
+  auto end = std::chrono::high_resolution_clock::now();
+  int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+  printf("Ran in %ld milliseconds\n", time);
+
   printf(" tourcost=%g\n", tourcost());
   if (0)
     for (i = 0; i < n; i++)
