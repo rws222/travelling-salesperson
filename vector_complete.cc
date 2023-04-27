@@ -201,15 +201,15 @@ void solve() {
 //   }
 
   for (i = 0; i < n; i++) {
-    for (j = 0; j < n; j+=8) {
+    for (j = 0; j < n; j+=4) {
         // float* dist_ptr = (float*) geomdist(i,j);
         // __m256 A=_mm256_loadu_ps(dist_ptr);
         // _mm256_store_ps(&distarr[i][j], A);
         // free(dist_ptr);
         // __m256 mask = _mm_set_256(geomdist(i,j+7), geomdist(i,j+6), geomdist(i,j+5), geomdist(i,j+4), geomdist(i,j+3), geomdist(i,j+2), geomdist(i,j+1), geomdist(i,j));
         // _mm_store_256ps((__m256 *)&distarr[i][j], mask);
-        __m256 mask = _mm256_set_ps(geomdist(i,j+7), geomdist(i,j+6), geomdist(i,j+5), geomdist(i,j+4), geomdist(i,j+3), geomdist(i,j+2), geomdist(i,j+1), geomdist(i,j));
-        _mm256_store_ps(&distarr[i][j], mask);
+        __m128 mask = _mm_set_ps(geomdist(i,j+3), geomdist(i,j+2), geomdist(i,j+1), geomdist(i,j));
+        _mm_store_ps(&distarr[i][j], mask);
     }
   }
 
