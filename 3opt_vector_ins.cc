@@ -24,7 +24,7 @@ Dist dist(int i, int j) {
   __m128 diff_y = _mm_sub_ps(y1_y2, _mm_shuffle_ps(y1_y2, y1_y2, _MM_SHUFFLE(1,0,3,2)));
 
   __m128 sum_squares = _mm_add_ps(_mm_mul_ps(diff_x, diff_x),
-                                  _mm_mul_ps(diff_y, diff_y));
+                                  _mm_mul_ps(diff_y, diff_y)); 
 
   float result;
   _mm_store_ss(&result, sum_squares);

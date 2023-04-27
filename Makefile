@@ -5,7 +5,7 @@
 # cd ../..
 
 CXX		 = g++
-CXXFLAGS = -Wall -g -O3 -std=c++17 -pthread -Iinclude -Loneapi-tbb-2021.8.0/lib/intel64/gcc4.8 -ltbb -mavx2
+CXXFLAGS = -Wall -g -O3 -std=c++17 -pthread -Iinclude -Loneapi-tbb-2021.8.0/lib/intel64/gcc4.8 -ltbb -mavx2 
 TARGET	 = bruteForce bruteForce_vector_ins complete parallel_complete parallel_bruteForce 3opt 3opt_vector_ins
 SRC	 = bruteForce.cc bruteForce_vector_ins.cc complete.cc parallel_complete.cc parallel_bruteForce.cc 3opt.cc 3opt_vector_ins.cc
 TBB  = -ltbb
