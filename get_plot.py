@@ -2,30 +2,37 @@ from subprocess import run
 import matplotlib.pyplot as plt
 from textwrap import wrap
 
-nodes = [5, 7, 9, 11, 13, 15]
-xticks1 = [5, 7, 9, 11, 13, 15]
+nodes = [5, 7, 9, 11, 13]
+xticks1 = [5, 7, 9, 11, 13]
 
 threads = [1, 3, 5, 7, 9, 11, 13, 15]
 xticks2 = [1, 3, 5, 7, 9, 11, 13, 15]
 
+nodes2 = [3, 5, 7, 9, 11]
+xticks3 = [3, 5, 7, 9, 11]
+
 brute = []
 complete = []
 parallel_complete = []
-parallel_complete = []
+parallel_brute = []
 for n in nodes:
-    result = run("./bruteForce -n "+str(n), shell=True, check=True, capture_output=True)
-    brute.append(int(result.stdout))
-    print("./bruteForce -n "+str(n))
+    # result = run("./bruteForce -n "+str(n), shell=True, check=True, capture_output=True)
+    # brute.append(int(result.stdout))
+    # print("./bruteForce -n "+str(n))
     result = run("./complete -n "+str(n), shell=True, check=True, capture_output=True)
     complete.append(int(result.stdout))
     print("./complete -n "+str(n))
     result = run("./parallel_complete -n "+str(n), shell=True, check=True, capture_output=True)
     parallel_complete.append(int(result.stdout))
     print("./parallel_complete -n "+str(n))
+    result = run("./parallel_bruteForce -n "+str(n), shell=True, check=True, capture_output=True)
+    parallel_brute.append(int(result.stdout))
+    print("./parallel_bruteForce -n "+str(n))
 fig, ax = plt.subplots()
-ax.plot(nodes, brute, label="Brute Force")
+# ax.plot(nodes, brute, label="Brute Force")
 ax.plot(nodes, complete, label="Optimized")
 ax.plot(nodes, parallel_complete, label="Parallel Optimized")
+ax.plot(nodes, parallel_brute, label="Parallel Brute Force")
 ax.set(xlabel='Number of Nodes in Cycle', ylabel='Execution Time (μs)')
 title = ax.set_title("\n".join(wrap("Time (μs) vs. Number of Nodes in Cycle when Threads=8", 60)))
 ax.legend()
@@ -39,26 +46,63 @@ print()
 brute = []
 complete = []
 parallel_complete = []
+parallel_brute = []
 for t in threads:
-    result = run("./bruteForce -n 15 -t "+str(t), shell=True, check=True, capture_output=True)
-    brute.append(int(result.stdout))
-    print("./bruteForce -n 15 -t "+str(t))
-    result = run("./complete -n 15 -t "+str(t), shell=True, check=True, capture_output=True)
+    # result = run("./bruteForce -n 15 -t "+str(t), shell=True, check=True, capture_output=True)
+    # brute.append(int(result.stdout))
+    # print("./bruteForce -n 15 -t "+str(t))
+    result = run("./complete -n 11 -t "+str(t), shell=True, check=True, capture_output=True)
     complete.append(int(result.stdout))
-    print("./complete -n 15 -t "+str(t))
-    result = run("./parallel_complete -n 15 -t "+str(t), shell=True, check=True, capture_output=True)
+    print("./complete -n 11 -t "+str(t))
+    result = run("./parallel_complete -n 11 -t "+str(t), shell=True, check=True, capture_output=True)
     parallel_complete.append(int(result.stdout))
-    print("./parallel_complete -n 15 -t "+str(t))
+    print("./parallel_complete -n 11 -t "+str(t))
+    result = run("./parallel_bruteForce -n 11 -t "+str(t), shell=True, check=True, capture_output=True)
+    parallel_brute.append(int(result.stdout))
+    print("./parallel_bruteForce -n 11 -t "+str(t))
 fig, ax = plt.subplots()
-ax.plot(threads, brute, label="Brute Force")
+# ax.plot(threads, brute, label="Brute Force")
 ax.plot(threads, complete, label="Optimized")
 ax.plot(threads, parallel_complete, label="Parallel Optimized")
+ax.plot(threads, parallel_brute, label="Parallel Brute Forc")
 ax.set(xlabel='Number of Threads', ylabel='Execution Time (μs)')
-title = ax.set_title("\n".join(wrap("Time (μs) vs. Threads when Nodes=15", 60)))
+title = ax.set_title("\n".join(wrap("Time (μs) vs. Threads when Nodes=11", 60)))
 ax.legend()
 fig.tight_layout()
 ax.set_xticks(xticks2)
 fig.savefig("plots/tVSt.png")
+plt.close(fig)
+
+print()
+
+brute = []
+complete = []
+parallel_complete = []
+parallel_brute = []
+for n in nodes2:
+    result = run("./bruteForce -n "+str(n), shell=True, check=True, capture_output=True)
+    brute.append(int(result.stdout))
+    print("./bruteForce -n "+str(n))
+    result = run("./complete -n "+str(n), shell=True, check=True, capture_output=True)
+    complete.append(int(result.stdout))
+    print("./complete -n "+str(n))
+    result = run("./parallel_complete -n "+str(n), shell=True, check=True, capture_output=True)
+    parallel_complete.append(int(result.stdout))
+    print("./parallel_complete -n "+str(n))
+    result = run("./parallel_bruteForce -n "+str(n), shell=True, check=True, capture_output=True)
+    parallel_brute.append(int(result.stdout))
+    print("./parallel_bruteForce -n "+str(n))
+fig, ax = plt.subplots()
+ax.plot(nodes2, brute, label="Brute Force")
+ax.plot(nodes2, complete, label="Optimized")
+ax.plot(nodes2, parallel_complete, label="Parallel Optimized")
+ax.plot(nodes2, parallel_brute, label="Parallel Brute Force")
+ax.set(xlabel='Number of Nodes in Cycle', ylabel='Execution Time (μs)')
+title = ax.set_title("\n".join(wrap("Time (μs) vs. Number of Nodes in Cycle when Threads=8", 60)))
+ax.legend()
+fig.tight_layout()
+ax.set_xticks(xticks3)
+fig.savefig("plots/n2VSt.png")
 plt.close(fig)
 
 print()
