@@ -6,11 +6,11 @@
 
 CXX		 = g++
 CXXFLAGS = -Wall -g -O3 -std=c++17 -pthread -Iinclude -Loneapi-tbb-2021.8.0/lib/intel64/gcc4.8 -ltbb
-TARGET	 = bruteForce complete parallel_complete parallel_bruteForce
-SRC	 = bruteForce.cc complete.cc parallel_complete.cc parallel_bruteForce.cc
+TARGET	 = bruteForce bruteForce_vector_ins complete parallel_complete parallel_bruteForce
+SRC	 = bruteForce.cc bruteForce_vector_ins.cc complete.cc parallel_complete.cc parallel_bruteForce.cc
 TBB  = -ltbb
 
-all: bruteForce complete parallel_complete parallel_bruteForce
+all: bruteForce bruteForce_vector_ins complete parallel_complete parallel_bruteForce
 
 bruteForce: bruteForce.cc
 	$(CXX) $(CXXFLAGS) $< -o $@
