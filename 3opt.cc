@@ -6,7 +6,7 @@
 
 typedef double Dist; // INPUT POINTS 
 Dist ptarr[101][2];
-int n = 10;
+int n = 0;
 
 #define sqr(x) ((x) * (x))
 Dist dist(int i, int j) { 
@@ -150,7 +150,7 @@ int main() {
   printf("Ran in %ld milliseconds\n", time);
 
   printf(" tourcost=%g\n", tourcost());
-  if (0)
+  if (1)
     for (i = 0; i < n; i++)
       printf("%g\t%g\n", ptarr[p[i]][0], ptarr[p[i]][1]);
   
