@@ -57,34 +57,32 @@ unsigned int factorial(unsigned int n) {
 void solve() { 
     int i, j;
     int size = (sizeof(c)/sizeof(*c));
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
-          distarr[i][j] = geomdist(i, j); 
-        }
-    }
+    tbb::parallel_for(0, n, [&](int i) {
+        tbb::parallel_for(0, n, [&](int j) {
+            distarr[i][j] = geomdist(i, j); 
+        });
+      });
+    // for (i = 0; i < n; i++) {
+    //     for (j = 0; j < n; j++) {
+    //       distarr[i][j] = geomdist(i, j); 
+    //     }
+    // }
+
     // atomic<Dist> optimal_cost = INF;
     // Point optimal_path[n];
 
-    atomic<int> count{0};
-
-    tbb::parallel_for(tbb::blocked_range<int>(2, n+1), [&](const tbb::blocked_range<int>& r) {
-        for (int i = r.begin(); i != r.end(); ++i) {
+    tbb::parallel_for(1, factorial(n), [&](const tbb::blocked_range<int>& r) {
           Point copy_c[MAXN];
           copy(begin(c), end(c), begin(copy_c));
-          do {
-            count++;
-              Dist temp_cost = 0;
-              for (int j = 1; j < n; j++) {
-                  temp_cost += distarr[copy_c[j-1].orig_index][copy_c[j].orig_index];
-              }
-              temp_cost += distarr[copy_c[n-1].orig_index][copy_c[0].orig_index];
-              if (temp_cost < minsum) {
-                  minsum = temp_cost;
-              }
-          } while (std::next_permutation(copy_c+1, copy_c+i));
-        }
+          Dist temp_cost = 0;
+          for (int j = 1; j < n; j++) {
+              temp_cost += distarr[copy_c[j-1].orig_index][copy_c[j].orig_index];
+          }
+          temp_cost += distarr[copy_c[n-1].orig_index][copy_c[0].orig_index];
+          if (temp_cost < minsum) {
+              minsum = temp_cost;
+          }
     });
-  cout << count << "\n";
 }
 
 // Report on how to use the command line to configure this program

@@ -40,39 +40,6 @@ Dist geomdist(int i, int j) {
   return (Dist) (sqrt(sqr(c[i].x-c[j].x) + sqr(c[i].y-c[j].y)));
 }
 
-// Dist* geomdist(int i, int j) {
-//   Dist* result = (Dist*) malloc(sizeof(float) * 8);
-//   __m256i x = _mm256_setr_epi32(c[i].x, c[i].x, c[i].x, c[i].x, c[i].x, c[i].x, c[i].x, c[i].x);
-//   __m256i y = _mm256_setr_epi32(c[i].y, c[i].y, c[i].y, c[i].y, c[i].y, c[i].y, c[i].y, c[i].y);
-//   __m256i j_offsets = _mm256_setr_epi32(j, j+1, j+2, j+3, j+4, j+5, j+6, j+7);
-//   __m256i jx = _mm256_i32gather_epi32((int*) &c[0].x, j_offsets, sizeof(Point));
-//   __m256i jy = _mm256_i32gather_epi32((int*) &c[0].y, j_offsets, sizeof(Point));
-//   __m256i dx = _mm256_sub_epi32(x, jx);
-//   __m256i dy = _mm256_sub_epi32(y, jy);
-//   __m256i dx2 = _mm256_mullo_epi32(dx, dx);
-//   __m256i dy2 = _mm256_mullo_epi32(dy, dy);
-//   __m256i sum = _mm256_add_epi32(dx2, dy2);
-//   __m256 sqrts = _mm256_sqrt_ps(_mm256_cvtepi32_ps(sum));
-//   _mm256_store_ps(result, sqrts);
-//   return result;
-// }
-
-// Dist* geomdist(int p1, int p2) {
-//     __m256 x1 = _mm256_set1_ps(c[p1].x);
-//     __m256 y1 = _mm256_set1_ps(c[p1].y);
-//     __m256 x2 = _mm256_set_ps(c[p2].x, c[p2].x, c[p2].x, c[p2].x, c[p2].x, c[p2].x, c[p2].x, c[p2].x);
-//     __m256 y2 = _mm256_set_ps(c[p2].y, c[p2].y, c[p2].y, c[p2].y, c[p2].y, c[p2].y, c[p2].y, c[p2].y);
-//     __m256 dx = _mm256_sub_ps(x1, x2);
-//     __m256 dy = _mm256_sub_ps(y1, y2);
-//     __m256 dx2 = _mm256_mul_ps(dx, dx);
-//     __m256 dy2 = _mm256_mul_ps(dy, dy);
-//     __m256 dist2 = _mm256_add_ps(dx2, dy2);
-//     __m256 dist = _mm256_sqrt_ps(dist2);
-//     Dist dist_arr[4];
-//     _mm256_store_ps(dist_arr, dist);
-//     return dist_arr[0];
-// }
-
 // GENERAL SUPPORT
 void swap(int i, int j) { 
   int t = p[i]; p[i] = p[j]; p[j] = t;
@@ -131,6 +98,7 @@ Dist mstdist(Mask mask) {
   }
   return totaldist;
 } 
+
 Mask allinmask;
 
 // HASH TABLE FOR MST LENGTHS
@@ -272,8 +240,8 @@ int main(int argc, char *argv[])
   auto start = chrono::high_resolution_clock::now(); 
   solve();
   auto end = chrono::high_resolution_clock::now();
-  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
-//   cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
+  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
   // secs = ((float) clock() - start) / CLOCKS_PER_SEC;
   // printf("%d\t%7.2f\t%10.4f\n", n, secs, (float) minsum);
   // }

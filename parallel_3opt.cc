@@ -14,6 +14,9 @@ const int max_size = 101;
 Dist ptarr[max_size][2];
 int n = 0;
 
+// number of threads
+const int num_threads = 16;
+
 // define math functions
 #define sqr(x) ((x) * (x))
 // distance between two points in the points array
@@ -69,7 +72,6 @@ void checkperm(int m) {
     saveperm(m);
 }
 
-const int num_threads = 8;
 // this 2d array is so that each thread can save it's own best tour.
 // then, after all threads are joined you can compare and find the best one
 int thread_p[num_threads][max_size];
@@ -232,7 +234,7 @@ void kick() {// replace tour ABCD with ADCB -- double bridge
 int main() { 
   int i, j;
   // do 'starts' heuristic sets, each starting from a random tour.
-  int starts = 4, runs = 250;
+  int starts = 4, runs = 250 / num_threads;
   // get input from points file, and set n accordingly
   // `cat 'points_file' | ./parallel_3opt` to run
   while (scanf("%lf %lf", ptarr[n]+0, ptarr[n]+1) != EOF) {

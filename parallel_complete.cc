@@ -186,10 +186,10 @@ void solve() {
   tbb::parallel_for(0, n, [&] (int i) {
     tbb::parallel_for(0, n, [&] (int j) {
         Dist td = distarr[i][j] = geomdist(i, j);
-        if (td > maxdiamdist) {
-            maxdiamdist = td; 
-            maxdiamindexi = i;
-        }
+        // if (td > maxdiamdist) {
+        //     maxdiamdist = td; 
+        //     maxdiamindexi = i;
+        // }
         });
     });
 //   for (i = 0; i < n; i++) {
