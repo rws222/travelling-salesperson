@@ -109,9 +109,9 @@ int main(int argc, char *argv[])
   auto start = chrono::high_resolution_clock::now(); 
   solve();
   auto end = chrono::high_resolution_clock::now();
-  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
+  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
   // secs = ((float) clock() - start) / CLOCKS_PER_SEC;
-  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
   // printf("%d\t%7.2f\t%10.4f\n", n, secs, (float) minsum);
   // }
   return 0;

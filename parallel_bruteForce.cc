@@ -11,6 +11,8 @@
 #include <mutex>
 #include <algorithm>
 #include <iterator>
+#include <thread>
+#include "pool.h"
 
 // Data types and sizes 
 #define MASKTYPE long 
@@ -37,6 +39,7 @@ Point c[MAXN];
 int p[MAXN];
 atomic<Dist> minsum = INF;
 mutex m;
+int t;
 int minp[MAXN];
 Dist distarr[MAXN][MAXN];
 
@@ -57,32 +60,36 @@ unsigned int factorial(unsigned int n) {
 void solve() { 
     int i, j;
     int size = (sizeof(c)/sizeof(*c));
-    tbb::parallel_for(0, n, [&](int i) {
-        tbb::parallel_for(0, n, [&](int j) {
-            distarr[i][j] = geomdist(i, j); 
-        });
-      });
-    // for (i = 0; i < n; i++) {
-    //     for (j = 0; j < n; j++) {
-    //       distarr[i][j] = geomdist(i, j); 
-    //     }
-    // }
+    // tbb::parallel_for(0, n, [&](int i) {
+    //     tbb::parallel_for(0, n, [&](int j) {
+    //         distarr[i][j] = geomdist(i, j); 
+    //     });
+    //   });
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+          distarr[i][j] = geomdist(i, j); 
+        }
+    }
 
     // atomic<Dist> optimal_cost = INF;
     // Point optimal_path[n];
 
-    tbb::parallel_for(1, factorial(n), [&](const tbb::blocked_range<int>& r) {
-          Point copy_c[MAXN];
-          copy(begin(c), end(c), begin(copy_c));
-          Dist temp_cost = 0;
-          for (int j = 1; j < n; j++) {
-              temp_cost += distarr[copy_c[j-1].orig_index][copy_c[j].orig_index];
-          }
-          temp_cost += distarr[copy_c[n-1].orig_index][copy_c[0].orig_index];
-          if (temp_cost < minsum) {
-              minsum = temp_cost;
-          }
-    });
+    ThreadPool pool(t);
+
+    do {
+      // Point copy_c[MAXN];
+      // copy(begin(c), end(c), begin(copy_c));
+      pool.enqueue([&] (){
+        Dist temp_cost = 0;
+        for (int j = 1; j < n; j++) {
+            temp_cost += distarr[c[j-1].orig_index][c[j].orig_index];
+        }
+        temp_cost += distarr[c[n-1].orig_index][c[0].orig_index];
+        if (temp_cost < minsum) {
+            minsum = temp_cost;
+        }
+      });
+    } while (std::next_permutation(c+1, c+n));
 }
 
 // Report on how to use the command line to configure this program
@@ -110,7 +117,7 @@ int main(int argc, char *argv[])
 {
 
   n = 10;
-  int t = 8;
+  t = 8;
 
   parseargs(argc, argv, n, t);
 
