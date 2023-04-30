@@ -5,6 +5,12 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <immintrin.h>
+#include <algorithm>
+#include <chrono>
+#include <cassert>
+#include <unistd.h>
+#include <iostream>
+#include <tbb/tbb.h>
 
 // Data types and sizes 
 #define MASKTYPE long 
@@ -41,21 +47,21 @@ float sqr(float x) {
 //   return (Dist) (sqrt(sqr(c[i].x-c[j].x) + sqr(c[i].y-c[j].y)));
 // }
 
-double dist(Point p1, Point p2) {
-    __m256d x1 = _mm256_set1_pd(p1.x);
-    __m256d y1 = _mm256_set1_pd(p1.y);
-    __m256d x2 = _mm256_set_pd(p2.x, p2.x, p2.x, p2.x);
-    __m256d y2 = _mm256_set_pd(p2.y, p2.y, p2.y, p2.y);
-    __m256d dx = _mm256_sub_pd(x1, x2);
-    __m256d dy = _mm256_sub_pd(y1, y2);
-    __m256d dx2 = _mm256_mul_pd(dx, dx);
-    __m256d dy2 = _mm256_mul_pd(dy, dy);
-    __m256d dist2 = _mm256_add_pd(dx2, dy2);
-    __m256d dist = _mm256_sqrt_pd(dist2);
-    double dist_arr[4];
-    _mm256_store_pd(dist_arr, dist);
-    return dist_arr[0];
-}
+// double dist(Point p1, Point p2) {
+//     __m256d x1 = _mm256_set1_pd(p1.x);
+//     __m256d y1 = _mm256_set1_pd(p1.y);
+//     __m256d x2 = _mm256_set_pd(p2.x, p2.x, p2.x, p2.x);
+//     __m256d y2 = _mm256_set_pd(p2.y, p2.y, p2.y, p2.y);
+//     __m256d dx = _mm256_sub_pd(x1, x2);
+//     __m256d dy = _mm256_sub_pd(y1, y2);
+//     __m256d dx2 = _mm256_mul_pd(dx, dx);
+//     __m256d dy2 = _mm256_mul_pd(dy, dy);
+//     __m256d dist2 = _mm256_add_pd(dx2, dy2);
+//     __m256d dist = _mm256_sqrt_pd(dist2);
+//     double dist_arr[4];
+//     _mm256_store_pd(dist_arr, dist);
+//     return dist_arr[0];
+// }
 
 // void solve() { 
 //     int i, j;
@@ -88,18 +94,25 @@ void solve() {
     //         distarr[i][j] = geomdist(i, j);
     //     }
     // }
+    // calculate distance matrix using vector instructions
     for (i = 0; i < n; i++) {
       for (j = 0; j < n; j += 4) {
-        Point p1 = c[i];
-        Point p2 = c[j];
-        double d1 = dist(p1, p2);
-        double d2 = dist(p1, c[j+1]);
-        double d3 = dist(p1, c[j+2]);
-        double d4 = dist(p1, c[j+3]);
-        distarr[i][j] = d1;
-        distarr[i][j+1] = d2;
-        distarr[i][j+2] = d3;
-        distarr[i][j+3] = d4;
+        __m256d x1 = _mm256_set1_pd(c[i].x);
+        __m256d y1 = _mm256_set1_pd(c[i].y);
+        __m256d x2 = _mm256_set_pd(c[j+3].x, c[j+2].x, c[j+1].x, c[j].x);
+        __m256d y2 = _mm256_set_pd(c[j+3].y, c[j+2].y, c[j+1].y, c[j].y);
+        __m256d dx = _mm256_sub_pd(x1, x2);
+        __m256d dy = _mm256_sub_pd(y1, y2);
+        __m256d dx2 = _mm256_mul_pd(dx, dx);
+        __m256d dy2 = _mm256_mul_pd(dy, dy);
+        __m256d dist2 = _mm256_add_pd(dx2, dy2);
+        __m256d dist = _mm256_sqrt_pd(dist2);
+        double dist_arr_4[4];
+        _mm256_store_pd(dist_arr_4, dist);
+        distarr[i][j] = dist_arr_4[0];
+        distarr[i][j+1] = dist_arr_4[1];
+        distarr[i][j+2] = dist_arr_4[2];
+        distarr[i][j+3] = dist_arr_4[3];
       }
     }
     Dist optimal_cost = INF;
@@ -119,22 +132,47 @@ void solve() {
     } while(next_permutation(c+1, c+n));
 }
 
+// Parse command line arguments using getopt()
+void parseargs(int argc, char** argv, int& n, int& t) {
+    // parse the command-line options
+    int opt;
+    while ((opt = getopt(argc, argv, "n:t:")) != -1) {
+        switch (opt) {
+            case 'n': n = atoi(optarg);
+            case 't': t = atoi(optarg); break;
+        }
+    }
+}
 
-// DRIVER
-int main(int argc, char *argv[]) { 
-  int i, start;
+int main(int argc, char *argv[])
+{
+
+  n = 10;
+  int t = 8;
+
+  parseargs(argc, argv, n, t);
+
+  assert(n > 1 &&  t > 0);
+
+  tbb::global_control gc(tbb::global_control::max_allowed_parallelism, t);
+
+  int i;
   float secs;
+  int j = 0;
   FILE *fp = fopen("rand60.txt", "r");
-  n = 0;
-  while (fscanf(fp, "%f %f", &c[n].x, &c[n].y) != EOF){
-    c[n].orig_index = n;
-    n++;
+  while (fscanf(fp, "%f %f", &c[j].x, &c[j].y) != EOF){
+    c[j].orig_index = j;
+    j++;
   }
-  while (scanf("%d", &n) != EOF) {
-    start = clock();
-    solve();
-    secs = ((float) clock() - start) / CLOCKS_PER_SEC; 
-    printf("%d\t%7.2f\t%10.4f\n", n, secs, (float) minsum);
-  }
+  // while (scanf("%d", &n) != EOF) {
+  auto start = chrono::high_resolution_clock::now(); 
+  solve();
+  auto end = chrono::high_resolution_clock::now();
+  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
+  // secs = ((float) clock() - start) / CLOCKS_PER_SEC;
+  cout << "duration: " << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+  cout << "minsum: " << minsum << endl;
+  // printf("%d\t%7.2f\t%10.4f\n", n, secs, (float) minsum);
+  // }
   return 0;
 }
