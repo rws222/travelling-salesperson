@@ -2,8 +2,8 @@ from subprocess import run
 import matplotlib.pyplot as plt
 from textwrap import wrap
 
-nodes = [5, 7, 9, 11, 13, 15, 17]
-xticks1 = [5, 7, 9, 11, 13, 15, 17]
+nodes = [5, 7, 9, 11, 13, 15]
+xticks1 = [5, 7, 9, 11, 13, 15]
 
 # threads = [1, 3, 5, 7, 9, 11, 13, 15]
 # xticks2 = [1, 3, 5, 7, 9, 11, 13, 15]
@@ -107,9 +107,11 @@ xticks1 = [5, 7, 9, 11, 13, 15, 17]
 
 # print()
 
+p_comp = []
 v_comp = []
 comp = []
 for n in nodes:
+    sum_p = 0
     sum_v = 0
     sum_c = 0
     for i in range(5):
@@ -122,9 +124,15 @@ for n in nodes:
         sum_c = sum_c + int(result.stdout)
     comp.append(sum_c/5)
     print("./complete -n "+str(n))
+    # for i in range(5):
+    #     result = run("./parallel_complete -n "+str(n), shell=True, check=True, capture_output=True)
+    #     sum_p = sum_p + int(result.stdout)
+    # p_comp.append(sum_p/5)
+    # print("./parallel_complete -n "+str(n))
 fig, ax = plt.subplots()
 ax.plot(nodes, v_comp, label="Vector Complete")
 ax.plot(nodes, comp, label="Complete")
+# ax.plot(nodes, p_comp, label="Parallel Complete")
 ax.set(xlabel='Number of Nodes in Cycle', ylabel='Execution Time (μs)')
 title = ax.set_title("\n".join(wrap("Time (μs) vs. Number of Nodes in Cycle", 60)))
 ax.legend()

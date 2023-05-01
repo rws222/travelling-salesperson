@@ -76,20 +76,33 @@ void solve() {
 
     ThreadPool pool(t);
 
+    // do {
+    //   // Point copy_c[MAXN];
+    //   // copy(begin(c), end(c), begin(copy_c));
+    //   pool.enqueue([&] (){
+    //     Dist temp_cost = 0;
+    //     for (int j = 1; j < n; j++) {
+    //         temp_cost += distarr[c[j-1].orig_index][c[j].orig_index];
+    //     }
+    //     temp_cost += distarr[c[n-1].orig_index][c[0].orig_index];
+    //     if (temp_cost < minsum) {
+    //         minsum = temp_cost;
+    //     }
+    //   });
+    // } while (std::next_permutation(c+1, c+n));
     do {
-      // Point copy_c[MAXN];
-      // copy(begin(c), end(c), begin(copy_c));
-      pool.enqueue([&] (){
+      pool.enqueue([=] () {
         Dist temp_cost = 0;
         for (int j = 1; j < n; j++) {
-            temp_cost += distarr[c[j-1].orig_index][c[j].orig_index];
+          temp_cost += distarr[c[j-1].orig_index][c[j].orig_index];
         }
         temp_cost += distarr[c[n-1].orig_index][c[0].orig_index];
         if (temp_cost < minsum) {
-            minsum = temp_cost;
+          minsum = temp_cost;
         }
-      });
+    });
     } while (std::next_permutation(c+1, c+n));
+
 }
 
 // Report on how to use the command line to configure this program

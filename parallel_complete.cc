@@ -156,12 +156,12 @@ void search(int m, Dist sum, Mask mask) {
   if (m == 1) {
     check(sum + dist2(p[0], p[1]));
   } else {
-    tbb::parallel_for(0, m, [&] (int i) {
-        order[i] = i;
-    });
-    // for (i = 0; i < m; i++) {
-    //   order[i] = i;
-    // }
+    // tbb::parallel_for(0, m, [&] (int i) {
+    //     order[i] = i;
+    // });
+    for (i = 0; i < m; i++) {
+      order[i] = i;
+    }
     for (top = m; top > 1; top -= half) { // Approx sort via tourn
       half = top / 2;
       for (i=0, j=top-half; i<half; i++, j++) {
@@ -201,9 +201,13 @@ void solve() {
 //       }
 //     }
 //   }
-  for (i = 0; i < MAXN; i++) {
+
+  tbb::parallel_for(0, MAXN, [&] (int i) {
     bit[i] = (Mask) 1 << i;
-  }
+  });
+  // for (i = 0; i < MAXN; i++) {
+  //   bit[i] = (Mask) 1 << i;
+  // }
   allinmask = 0;
   for (i = 0; i < n; i++) {
     allinmask |= bit[i];

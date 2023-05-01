@@ -84,13 +84,13 @@ TARGET	 = bruteForce complete parallel_complete parallel_bruteForce
 SRC	 = bruteForce.cc complete.cc parallel_complete.cc parallel_bruteForce.cc
 TBB  = -ltbb
 
-all: bruteForce bruteForce_vector_ins complete parallel_complete parallel_bruteForce 3opt 3opt_vector_ins vector_complete
+all: bruteForce complete parallel_complete parallel_bruteForce 3opt 3opt_vector_ins vector_complete
 
 bruteForce: bruteForce.cc
 	$(CXX) $(CXXFLAGS) $< -o $@
 
-bruteForce_vector_ins: bruteForce_vector_ins.cc
-	$(CXX) $(CXXFLAGS) $< -o $@ -mavx2 
+# bruteForce_vector_ins: bruteForce_vector_ins.cc
+# 	$(CXX) $(CXXFLAGS) $< -o $@ -mavx2 
 
 complete: complete.cc
 	$(CXX) $(CXXFLAGS)  $< -o $@
