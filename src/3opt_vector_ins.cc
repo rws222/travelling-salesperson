@@ -132,7 +132,7 @@ void kick() {// replace tour ABCD with ADCB -- double bridge
   reverse(i, j-1);
   reverse(j, k-1);
   reverse(k, n-1);
-  reverse(0, n-1);    // ABCD = A(BrCrDr)r
+  reverse(i, n-1);    // ABCD = A(BrCrDr)r
 }
 
 int main() { 

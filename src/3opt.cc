@@ -115,7 +115,7 @@ void kick() {// replace tour ABCD with ADCB -- double bridge
   reverse(i, j-1);
   reverse(j, k-1);
   reverse(k, n-1);
-  reverse(0, n-1);    // ABCD = A(BrCrDr)r
+  reverse(i, n-1);    // ABCD = A(BrCrDr)r
 }
 
 int main() { 
@@ -150,7 +150,7 @@ int main() {
   printf("Ran in %ld milliseconds\n", time);
 
   printf(" tourcost=%g\n", tourcost());
-  if (1)
+  if (0)
     for (i = 0; i < n; i++)
       printf("%g\t%g\n", ptarr[p[i]][0], ptarr[p[i]][1]);
   
