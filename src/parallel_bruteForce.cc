@@ -12,7 +12,9 @@
 #include <algorithm>
 #include <iterator>
 #include <thread>
-#include "pool.h"
+#include <numeric>
+#include <stdexcept>
+#include <vector>
 
 // Data types and sizes 
 #define MASKTYPE long 
@@ -38,6 +40,7 @@ Point c[MAXN];
 
 int p[MAXN];
 atomic<Dist> minsum = INF;
+// Dist minsum = INF;
 mutex m;
 int t;
 int minp[MAXN];
@@ -51,57 +54,65 @@ Dist geomdist(int i, int j) {
   return (Dist) (sqrt(sqr(c[i].x-c[j].x) + sqr(c[i].y-c[j].y)));
 }
 
-unsigned int factorial(unsigned int n) {
+int factorial(int n) {
     if (n == 0)
        return 1;
     return n * factorial(n - 1);
 }
 
+void kth_permutation(int n, int k) {
+
+  // Create a vector of integers from 0 to n
+  std::vector<int> perm(n);
+  std::iota(perm.begin(), perm.end(), 0);
+
+  // Compute the factorial of n-1
+  int f = 1;
+  for (int i = 1; i < n; ++i) {
+    f *= i;
+  }
+
+  // Generate the kth permutation using factorial number system
+  for (int i = 0; i < n - 1; ++i) {
+    int j = i + k / f;
+    k %= f;
+    f /= n - 1 - i;
+    std::swap(perm[i], perm[j]);
+  }
+
+  Dist temp_cost = 0;
+  temp_cost += distarr[c[0].orig_index][c[perm[0]+1].orig_index];
+  for (int x = 1; x < n; x++) {
+    temp_cost += distarr[c[perm[x-1]+1].orig_index][c[perm[x]+1].orig_index];
+  }
+  temp_cost += distarr[c[perm[n-1]+1].orig_index][c[0].orig_index];
+        
+  if (temp_cost < minsum) {
+      minsum = temp_cost;
+  }
+
+  return;
+}
+
 void solve() { 
     int i, j;
     int size = (sizeof(c)/sizeof(*c));
-    // tbb::parallel_for(0, n, [&](int i) {
-    //     tbb::parallel_for(0, n, [&](int j) {
-    //         distarr[i][j] = geomdist(i, j); 
-    //     });
-    //   });
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
-          distarr[i][j] = geomdist(i, j); 
-        }
-    }
+    tbb::parallel_for(0, n, [&](int i) {
+        tbb::parallel_for(0, n, [&](int j) {
+            distarr[i][j] = geomdist(i, j); 
+        });
+      });
+    // for (i = 0; i < n; i++) {
+    //     for (j = 0; j < n; j++) {
+    //       distarr[i][j] = geomdist(i, j); 
+    //     }
+    // }
+    tbb::parallel_for(0, factorial(n-1), [&](int k){
+      kth_permutation(n-1, k);
+    });
 
     // atomic<Dist> optimal_cost = INF;
     // Point optimal_path[n];
-
-    ThreadPool pool(t);
-
-    // do {
-    //   // Point copy_c[MAXN];
-    //   // copy(begin(c), end(c), begin(copy_c));
-    //   pool.enqueue([&] (){
-    //     Dist temp_cost = 0;
-    //     for (int j = 1; j < n; j++) {
-    //         temp_cost += distarr[c[j-1].orig_index][c[j].orig_index];
-    //     }
-    //     temp_cost += distarr[c[n-1].orig_index][c[0].orig_index];
-    //     if (temp_cost < minsum) {
-    //         minsum = temp_cost;
-    //     }
-    //   });
-    // } while (std::next_permutation(c+1, c+n));
-    do {
-      pool.enqueue([=] () {
-        Dist temp_cost = 0;
-        for (int j = 1; j < n; j++) {
-          temp_cost += distarr[c[j-1].orig_index][c[j].orig_index];
-        }
-        temp_cost += distarr[c[n-1].orig_index][c[0].orig_index];
-        if (temp_cost < minsum) {
-          minsum = temp_cost;
-        }
-    });
-    } while (std::next_permutation(c+1, c+n));
 
 }
 
@@ -141,7 +152,7 @@ int main(int argc, char *argv[])
   int i;
   float secs;
   int j = 0;
-  FILE *fp = fopen("rand60.txt", "r");
+  FILE *fp = fopen("datasets/rand60.txt", "r");
   while (fscanf(fp, "%f %f", &c[j].x, &c[j].y) != EOF){
     c[j].orig_index = j;
     j++;
@@ -150,9 +161,9 @@ int main(int argc, char *argv[])
   auto start = chrono::high_resolution_clock::now(); 
   solve();
   auto end = chrono::high_resolution_clock::now();
-  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
+  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << " " << (float) minsum << "\n";
   // secs = ((float) clock() - start) / CLOCKS_PER_SEC;
-  // cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
+  cout << chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "\n";
   // printf("%d\t%7.2f\t%10.4f\n", n, secs, (float) minsum);
   // }
   return 0;
