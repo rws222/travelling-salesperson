@@ -79,7 +79,7 @@
 
 
 CXX		 = g++
-CXXFLAGS = -Wall -g -O3 -std=c++17 -pthread
+CXXFLAGS = -Wall -g -std=c++17 -pthread
 
 all: bruteForce complete parallel_complete parallel_bruteForce 3opt parallel_3opt 3opt_vector_ins vector_complete
 
