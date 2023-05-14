@@ -210,7 +210,7 @@ int main(int argc, char *argv[])
 
   int i;
   float secs;
-  FILE *fp = fopen("rand60.txt", "r");
+  FILE *fp = fopen("datasets/rand60.txt", "r");
   int j = 0;
   while (fscanf(fp, "%f %f", &c[j].x, &c[j].y) != EOF)
     j++;
