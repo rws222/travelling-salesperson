@@ -117,28 +117,28 @@ Tptr bin[MAXBIN];
 Dist mstdistlookup(Mask mask) { 
   Tptr p;
   int h = mask % MAXBIN;
-  Dist result = tbb::parallel_reduce(
-    tbb::blocked_range<Tptr>(bin[h], NULL),
-    Dist(),
-    [&](const tbb::blocked_range<Tptr>& range, Dist init) -> Dist {
-      for (Tptr p = range.begin(); p != range.end(); ++p) {
-        if (p->arg == mask) {
-          init = p->val;
-          break;
-        }
-      }
-      return init;
-    },
-    [](Dist x, Dist y) -> Dist {
-      return x + y;
-    });
+  // Dist result = tbb::parallel_reduce(
+  //   tbb::blocked_range<Tptr>(bin[h], NULL),
+  //   Dist(),
+  //   [&](const tbb::blocked_range<Tptr>& range, Dist init) -> Dist {
+  //     for (Tptr p = range.begin(); p != range.end(); ++p) {
+  //       if (p->arg == mask) {
+  //         init = p->val;
+  //         break;
+  //       }
+  //     }
+  //     return init;
+  //   },
+  //   [](Dist x, Dist y) -> Dist {
+  //     return x + y;
+  //   });
 
-  if (result > 0) {
-    return result;
-  }
-  // for (p = bin[h]; p != NULL; p = p->next)
-  //   if (p->arg == mask) 
-  //     return p->val;
+  // if (result > 0) {
+  //   return result;
+  // }
+  for (p = bin[h]; p != NULL; p = p->next)
+    if (p->arg == mask) 
+      return p->val;
   p = (Tptr) malloc(sizeof(Tnode)); 
   p->arg = mask;
   p->val = mstdist(mask);
@@ -183,31 +183,31 @@ void search(int m, Dist sum, Mask mask) {
 void solve() { 
   int i, j;
   maxdiamdist = ZERO;
-  tbb::parallel_for(0, n, [&] (int i) {
-    tbb::parallel_for(0, n, [&] (int j) {
-        Dist td = distarr[i][j] = geomdist(i, j);
-        // if (td > maxdiamdist) {
-        //     maxdiamdist = td; 
-        //     maxdiamindexi = i;
-        // }
-        });
-    });
-//   for (i = 0; i < n; i++) {
-//     for (j = 0; j < n; j++) {
-//       Dist td = distarr[i][j] = geomdist(i, j); 
-//       if (td > maxdiamdist) {
-//         maxdiamdist = td; 
-//         maxdiamindexi = i;
-//       }
-//     }
-//   }
+  // tbb::parallel_for(0, n, [&] (int i) {
+  //   tbb::parallel_for(0, n, [&] (int j) {
+  //       Dist td = distarr[i][j] = geomdist(i, j);
+  //       if (td > maxdiamdist) {
+  //           maxdiamdist = td; 
+  //           maxdiamindexi = i;
+  //       }
+  //       });
+  //   });
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      Dist td = distarr[i][j] = geomdist(i, j); 
+      if (td > maxdiamdist) {
+        maxdiamdist = td; 
+        maxdiamindexi = i;
+      }
+    }
+  }
 
-  tbb::parallel_for(0, MAXN, [&] (int i) {
-    bit[i] = (Mask) 1 << i;
-  });
-  // for (i = 0; i < MAXN; i++) {
+  // tbb::parallel_for(0, MAXN, [&] (int i) {
   //   bit[i] = (Mask) 1 << i;
-  // }
+  // });
+  for (i = 0; i < MAXN; i++) {
+    bit[i] = (Mask) 1 << i;
+  }
   allinmask = 0;
   for (i = 0; i < n; i++) {
     allinmask |= bit[i];
@@ -254,9 +254,7 @@ int main(int argc, char *argv[])
 
   tbb::global_control gc(tbb::global_control::max_allowed_parallelism, t);
 
-  int i;
-  float secs;
-  FILE *fp = fopen("rand60.txt", "r");
+  FILE *fp = fopen("datasets/rand60.txt", "r");
   int j = 0;
   while (fscanf(fp, "%f %f", &c[j].x, &c[j].y) != EOF)
     j++;
