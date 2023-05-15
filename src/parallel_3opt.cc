@@ -8,6 +8,7 @@
 #include <limits>
 #include <chrono>
 #include <functional>
+#include <mutex>
 
 typedef double Dist; // INPUT POINTS
 // size to make the arrays. needs to be more than the number of points you load in
@@ -16,29 +17,23 @@ Dist ptarr[max_size][2];
 int n = 0;
 
 // number of threads
-const int num_outer_threads = 4;
+const int num_outer_threads = 3;
 // theoretical max with 16 logical processors should be 4. test with 2 to see if correct
-const int num_inner_threads = 4;
+const int num_inner_threads = 5;
 
 // define math functions
 #define sqr(x) ((x) * (x))
 // distance between two points in the points array. NO SQRT
 Dist dist(int i, int j)
 {
-    return sqr(ptarr[i][0] - ptarr[j][0]) + sqr(ptarr[i][1] - ptarr[j][1]);
-}
-// real distance formula used at the end with the sqrt
-Dist real_dist(int i, int j)
-{
     return sqrt(sqr(ptarr[i][0] - ptarr[j][0]) + sqr(ptarr[i][1] - ptarr[j][1]));
 }
 
-// PERM VECTOR: current tour is in p[0..n-1]
+// Permutation array. Keeps track of current tour in each thread
 int p[num_outer_threads][max_size];
 
 // distance between two indices in the current tour array
 #define dp(th, i, j) (dist(p[th][i], p[th][j]))
-#define real_dp(i, j) (real_dist(p[0][i], p[0][j]))
 
 // swap values at 2 indices in the current tour array
 void swap(int th, int i, int j)
@@ -64,29 +59,34 @@ Dist tourcost(int th)
         sum += dp(th, i - 1, i);
     return sum;
 }
-// only used at the end when reporting the final tour cost
-Dist real_tourcost(int th) {
-    Dist sum = real_dp(0, n - 1);
-    for (int i = 1; i < n; i++)
-        sum += real_dp(i - 1, i);
-    return sum;
-}
 
 // saved paths and costs
 int savedp[5][max_size];
 Dist savedcost[5];
+
+std::mutex savedp_lock; // lock for next two functions
 // save the current tour cost, and current tour path
 void saveperm(int th, int m)
 {
+    // manage race condition on best ever tour
+    if (m == 0) savedp_lock.lock();
+
     savedcost[m] = tourcost(th);
     for (int i = 0; i < n; i++)
         savedp[m][i] = p[th][i];
+    
+    if (m == 0) savedp_lock.unlock();
 }
 // restore a saved permutation back into the main tour array
 void restoreperm(int th, int m)
 {
+    // manage race condition on best ever tour
+    if (m == 0) savedp_lock.lock();
+
     for (int i = 0; i < n; i++)
         p[th][i] = savedp[m][i];
+
+    if (m == 0) savedp_lock.unlock();
 }
 // save the current perm only if it's cost is less that the current best
 void checkperm(int th, int m)
@@ -286,48 +286,50 @@ int main()
 
     savedcost[0] = 999999999; // init best tour ever in perm[0]
 
-    // create all outer threads
-    std::vector<std::thread> outer_threads(starts);
-
     // setup for rng
     static thread_local std::mt19937 outer_gen;
     std::uniform_int_distribution<int> outer_dis(0, INT32_MAX);
 
-    for (int s = 0; s < starts; s++)
-    {
-        // spawn all outer threads
-        outer_threads[s] = std::thread([&]() {
+    // create all outer threads
+    std::vector<std::thread> outer_threads(starts);
 
-            // define thread_p here, so that there is a unique copy for each outer thread
-            std::vector<std::vector<int>> thread_p(num_inner_threads, std::vector<int>(n + 1, 0));
+    auto outer_lamda = [&] (int s) {
 
-            // load all points into the tour array
-            for (int i = 0; i < n; i++) {
-                p[s][i] = i;
-            }
+        // define thread_p here, so that there is a unique copy for each outer thread
+        std::vector<std::vector<int>> thread_p(num_inner_threads, std::vector<int>(n + 1, 0));
 
-            // shuffle the tour array to start with a random tour
-            for (int i = n; i > 1; i--) {
-                swap(s, i - 1, outer_dis(outer_gen) % i);
-            }
+        // load all points into the tour array
+        for (int i = 0; i < n; i++) {
+            p[s][i] = i;
+        }
 
+        // shuffle the tour array to start with a random tour
+        for (int i = n; i > 1; i--) {
+            swap(s, i - 1, outer_dis(outer_gen) % i);
+        }
+
+        kopt(thread_p, s);
+        checkperm(s, 0);
+        saveperm(s, s + 1);
+
+        for (int i = 1; i < runs; i++) {
+            restoreperm(s, s + 1);
+            kick(s);
             kopt(thread_p, s);
+            checkperm(s, s + 1);
             checkperm(s, 0);
-            saveperm(s, s + 1);
+        }
+    };
 
-            for (int i = 1; i < runs; i++) {
-                restoreperm(s, s + 1);
-                kick(s);
-                kopt(thread_p, s);
-                checkperm(s, s+1);
-                checkperm(s, 0);
-            }
-        });
+    // spawn all outer threads
+    for (int s = 0; s < starts; s++) {
+        outer_threads[s] = std::thread(outer_lamda, s);
     }
-    for (auto &t : outer_threads)
-    {
+    // join all outer threads
+    for (auto &t : outer_threads) {
         t.join();
     }
+    // load best perm ever
     restoreperm(0, 0);
 
     // end timer
@@ -335,7 +337,7 @@ int main()
     int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     printf("Ran in %ld milliseconds\n", time);
 
-    printf(" tourcost=%g\n", real_tourcost(0));
+    printf(" tourcost=%g\n", tourcost(0));
     if (0)
         for (int i = 0; i < n; i++)
             printf("%g\t%g\n", ptarr[p[0][i]][0], ptarr[p[0][i]][1]);
