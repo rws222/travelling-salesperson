@@ -79,9 +79,9 @@
 
 
 CXX		 = g++
-CXXFLAGS = -Wall -g -O3 -std=c++17 -pthread
+CXXFLAGS = -Wall -g -std=c++17 -pthread
 
-all: bruteForce complete parallel_complete parallel_bruteForce 3opt parallel_3opt 3opt_vector_ins vector_complete
+all: bruteForce complete parallel_complete parallel_bruteForce 3opt parallel_3opt 3opt_vector_ins vector_complete parallel_3opt_no_outer
 
 build:
 	mkdir -p build
@@ -112,6 +112,9 @@ parallel_3opt: parallel_3opt.cc build
 
 vector_complete: vector_complete.cc build
 	$(CXX) $(CXXFLAGS)  $< -o build/$@  -mavx2 
+
+parallel_3opt_no_outer: parallel_3opt_no_outer.cc build
+	$(CXX) $(CXXFLAGS)  $< -o build/$@ 
 
 clean:
 	rm -rf build
